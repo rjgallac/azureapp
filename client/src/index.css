@@ -1,0 +1,23 @@
+/* Global styles for the application */
+
+.App {
+  font-family: sans-serif;
+  padding: 20px;
+  text-align: center;
+}
+
+.item-card {
+  border: 1px solid #ccc;
+  padding: 15px;
+  margin: 10px;
+  border-radius: 8px;
+  display: inline-block;
+  width: 250px;
+  box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.item-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}

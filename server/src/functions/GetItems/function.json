@@ -1,0 +1,14 @@
+{
+  "bindings": [
+    {
+      "type": "httpTrigger",
+      "direction": "in",
+      "methods": ["get"],
+      "route": "items"
+    },
+    {
+      "type": "http",
+      "direction": "out"
+    }
+  ]
+}
