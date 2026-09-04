@@ -1,0 +1,40 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      # --- Frontend Build (React) ---
+      - name: Setup Node.js for Client
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      - name: Install Client Dependencies
+        run: npm install
+        working-directory: ./client
+      - name: Build Client
+        run: npm run build
+        working-directory: ./client
+      
+      # --- Backend Build (Azure Functions) ---
+      - name: Setup Node.js for Server
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+          cache: 'npm'
+      - name: Install Server Dependencies
+        run: npm install
+        working-directory: ./server
+      - name: Build Functions
+        run: npm run build # Assuming a build script exists or using a specific build command
+        working-directory: ./server
+        # NOTE: For Azure Functions, the build command might be 'func build' or similar.
+        # This needs to be verified against the actual function tooling.

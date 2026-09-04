@@ -11,11 +11,21 @@ The application follows a monorepo structure:
 ## ⚙️ Setup Instructions
 1. **Install Dependencies:**
    - Navigate to the client directory and run: `npm install`
-   - Navigate to the server directory and install function dependencies (e.g., `npm install @azure/cosmos`).
-2. **Local Run:**
-   - Start the backend: `func start` (in the `/server` directory).
-   - Start the frontend: `npm start` (in the `/client` directory).
-3. **Deployment:**
+   - Navigate to the server directory and run: `npm install`
+2. **Run Cosmos DB locally:**
+   - Install and start the [Azure Cosmos DB Emulator](https://learn.microsoft.com/azure/cosmos-db/emulator) on Windows, or run the Linux emulator with Docker:
+     `docker run --detach --publish 8081:8081 --publish 1234:1234 --publish 10250-10255:10250-10255 --name cosmos-emulator mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator`
+   - The local emulator endpoint is `https://localhost:8081`. The Windows emulator exposes its Data Explorer at `https://localhost:8081/_explorer/index.html`.
+   - For the Windows emulator, open the emulator certificate from the system tray and trust it in the current user's Trusted Root Certification Authorities store. The Docker emulator uses its own certificate; follow the emulator documentation if your client rejects the certificate.
+   - `server/local.settings.json` is configured with the emulator endpoint and its well-known local development key. Do not use this key for Azure resources.
+   - Create the database and container expected by the function (`YourDatabase` and `YourContainer`) in Data Explorer, or change those names in `server/GetItems/index.js`.
+3. **Run local Azure Functions storage:**
+   - Install Azurite with `npm install --global azurite`.
+   - Start it in a separate terminal with `azurite --silent --location .azurite --debug .azurite/debug.log` from the repository root. This satisfies `AzureWebJobsStorage=UseDevelopmentStorage=true` in `server/local.settings.json`.
+4. **Run the local stack:**
+   - Start the backend: `func start` (from the `/server` directory).
+   - Start the frontend: `npm start` (from the `/client` directory).
+5. **Deployment:**
    - Use the scripts/tools in the `/infrastructure` directory to provision Azure resources (Cosmos DB, Function App, etc.).
    - Deploy the client build to Azure Static Web Apps.
    - Deploy the server code to the Azure Function App.
