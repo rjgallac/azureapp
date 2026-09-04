@@ -17,6 +17,7 @@ The application follows a monorepo structure:
      `docker run --detach --publish 8081:8081 --publish 1234:1234 --publish 10250-10255:10250-10255 --name cosmos-emulator mcr.microsoft.com/cosmosdb/linux/azure-cosmos-emulator`
    - The local emulator endpoint is `https://localhost:8081`. The Windows emulator exposes its Data Explorer at `https://localhost:8081/_explorer/index.html`.
    - For the Windows emulator, open the emulator certificate from the system tray and trust it in the current user's Trusted Root Certification Authorities store. The Docker emulator uses its own certificate; follow the emulator documentation if your client rejects the certificate.
+   - `server/local.settings.json` enables the local-only `CosmosDBAllowInsecureTLS` setting for the emulator's self-signed certificate. Do not enable this setting for Azure resources; use a trusted certificate instead.
    - `server/local.settings.json` is configured with the emulator endpoint and its well-known local development key. Do not use this key for Azure resources.
    - Create the database and container expected by the function (`YourDatabase` and `YourContainer`) in Data Explorer, or change those names in `server/GetItems/index.js`.
 3. **Run local Azure Functions storage:**

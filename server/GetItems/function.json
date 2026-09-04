@@ -4,13 +4,8 @@
       "type": "httpTrigger",
       "direction": "in",
       "name": "req",
-      "methods": ["get", "post", "options"],
-      "route": "items",
-      "cors": {
-        "origin": ["http://localhost:3000", "*"],
-        "allowMethods": ["GET", "POST", "OPTIONS"],
-        "allowHeaders": ["*"]
-      }
+      "methods": ["get", "post", "put", "options"],
+      "route": "items"
     },
     {
       "type": "http",
