@@ -26,7 +26,7 @@ jobs:
       - name: Zip Function App
         run: |
           cd server
-          zip -r ../function.zip .
+          zip -r ../function.zip . -x "*.git*" "*.node_modules/*" "node_modules/*" "local.settings.json" ".vscode/*" "src/*"
 
       - name: Deploy Function App
         run: |
@@ -34,4 +34,3 @@ jobs:
             --name ${{ secrets.FUNCTION_APP_NAME }} \
             --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
             --src ../function.zip
-        shell: bash

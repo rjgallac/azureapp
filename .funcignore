@@ -1,0 +1,13 @@
+# Node
+node_modules
+
+# Local settings
+local.settings.json
+
+# Test directories
+test
+*.test.js
+
+# Editor
+.vscode
+.idea
