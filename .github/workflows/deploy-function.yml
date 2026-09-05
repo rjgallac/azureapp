@@ -25,29 +25,57 @@ jobs:
           az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
-            --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true
+            --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true YARN_BUILD_COMMAND=build NPM_BUILD_COMMAND=build
 
-      - name: Deploy Backend via ZIP
+      - name: Build Deployment ZIP
         run: |
-          cd server
+          echo "Building deployment package..."
 
-          # Clean and create deployment package
-          rm -rf node_modules .git .vscode
+          # Install zip
+          sudo apt-get update && sudo apt-get install -y zip
 
-          # Create zip with all required function files
-          # Note: We need to include host.json and package.json in root
-          zip -r ../function.zip . \
-            -x "*.git*" "node_modules/*" ".vscode/*" "src/*"
+          # Create clean target directory
+          mkdir -p ./deployment-source
+          cp -r server/* ./deployment-source/
 
-          echo "Deploying Function App..."
+          # Remove unnecessary files
+          rm -rf ./deployment-source/node_modules
+          rm -rf ./deployment-source/.git
+          rm -rf ./deployment-source/.vscode
+          rm -f ./deployment-source/.funcignore
+          rm -f ./deployment-source/src
+
+          # Create zip with only required files
+          cd ./deployment-source
+          zip -r ../function.zip . -x "*.git*" "node_modules/*" ".vscode/*" "src/*"
+
+          # Cleanup
+          cd ..
+          rm -rf ./deployment-source
+
+      - name: Deploy Function App via ZIP
+        run: |
+          echo "Starting Function App deployment..."
+
           az webapp deployment source config-zip \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
             --src ../function.zip
 
+      - name: Restart Function App
+        run: |
+          echo "Restarting Function App to apply changes..."
+          az webapp restart \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth \
+            --slot production
+
       - name: Verify Deployment
         run: |
-          echo "Deployment complete! Check Azure Portal for Function App status."
+          echo "Deployment complete! Check Azure Portal or test endpoint:"
           az functionapp function list \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth || echo "Functions may take a few minutes to register"
+
+          # Test the function
+          timeout 30 curl -X GET "https://rg-todos-func-app.azurewebsites.net/api/GetItems" -H "accept: application/json" || echo "Function endpoint check attempted"
