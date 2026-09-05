@@ -21,6 +21,7 @@ module backendResources './modules/backend-resources.bicep' = {
 
 
 // --- Outputs ---
+output subscriptionId string = subscription().id
 output storageAccountName string = backendResources.outputs.storageAccountName
 output resourceGroupName string = resourceGroup.name
 param prefix string = 'rg-todos'
