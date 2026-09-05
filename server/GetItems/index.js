@@ -32,6 +32,7 @@ module.exports = async function (context, req) {
                 context.res = { status: 400, body: { message: 'Todo text is required.' } };
                 return;
             }
+            
             const item = {
                 text,
                 completed: false,
