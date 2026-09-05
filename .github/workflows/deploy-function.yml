@@ -16,8 +16,9 @@ jobs:
 
       - name: Login to Azure
         run: |
-          echo '${{ secrets.AZURE_CREDENTIALS }}' > ./azure-creds.json
-          az login --service-principal --username "$(jq -r .clientId ./azure-creds.json)" --password "$(jq -r .clientSecret ./azure-creds.json)" --tenant "$(jq -r .tenantId ./azure-creds.json)"
+          echo "Current default subscription: $(az account show --query subscriptionId -o tsv)"
+          echo "Current default tenant: $(az account show --query tenantId -o tsv)"
+          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
 
       - name: Enable Functions
         run: |
