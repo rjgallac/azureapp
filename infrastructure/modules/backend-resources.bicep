@@ -55,6 +55,13 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     functionAppConfig: {
+      deployment: {
+        storage: {
+          connection: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${listKeys(storageAccount.id, '2023-01-01').keys[0].value};EndpointSuffix=core.windows.net'
+          type: 'azureBlob'
+          containerName: 'function-deployments'
+        }
+      }
       runtime: {
         name: 'node'
         version: '20'
