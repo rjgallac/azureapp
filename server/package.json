@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Azure Functions backend for the web app",
   "scripts": {
-    "start": "func start",
-    "build": "echo 'No build required for Node.js Function App'"
+    "start": "func start"
   },
+  "main": "index.js",
   "dependencies": {
     "@azure/data-tables": "13.3.2",
     "dotenv": "^16.3.1"

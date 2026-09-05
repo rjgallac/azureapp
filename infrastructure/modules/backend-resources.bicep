@@ -55,23 +55,38 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'BlobContainer'
-          value: storageAccount.id
-          authentication: {
-            type: 'SystemAssignedIdentity'
-          }
-        }
-      }
       runtime: {
         name: 'node'
         version: '20'
+      }
+      deployment: {
+        source: {
+          gitHub: {
+            repositoryUrl: 'https://github.com/<YOUR_USERNAME>/azureapp.git'
+            branch: 'main'
+            isManualIntegration: true
+          }
+        }
       }
       scaleAndConcurrency: {
         instanceMemoryMB: 2048
         maximumInstanceCount: 100
       }
+      appSettings: [
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'node'
+        }
+        {
+          name: 'NODE_VERSION'
+          value: '20'
+        }
+      ]
+    }
       appSettings: [
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
