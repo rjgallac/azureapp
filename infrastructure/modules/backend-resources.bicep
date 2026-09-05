@@ -27,21 +27,21 @@ resource todosTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021
 // --- 2. App Service Plan for Function App ---
 // =================================================================================
 // Defines the underlying compute resources for the Function App.
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
+// Using Consumption Plan (Y1) which is FREE for small personal projects (<$10/month)
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-01-01' = {
   name: '${prefix}-func-plan'
   location: location
-  kind: 'functionapp'
   sku: {
-    tier: 'Basic'
-    name: 'B1'  // Very cheap: ~$0.002/hour
-    size: 'B1'
-    family: 'B'
-    capacity: 1
+    tier: 'Dynamic'
+    name: 'Y1'
+    capacity: 0  // Dynamic scaling
   }
   properties: {
+    isSpot: false
+    maximumNumberOfWorkers: 10
     reserved: true
-    operatingSystem: 'Linux'
-    freeTier: false
+    targetWorkerSize: 0
+    workerSizeId: 0
   }
 }
 
