@@ -33,8 +33,6 @@ module.exports = async function (context, req) {
                 return;
             }
 
-
-            
             const item = {
                 text,
                 completed: false,
