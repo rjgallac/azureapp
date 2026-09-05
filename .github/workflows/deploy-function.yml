@@ -20,62 +20,69 @@ jobs:
           echo "Current default tenant: $(az account show --query tenantId -o tsv)"
           az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
 
-      - name: Enable Functions
+      - name: Enable Functions Settings
         run: |
           az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
-            --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true YARN_BUILD_COMMAND=build NPM_BUILD_COMMAND=build
+            --settings \
+              FUNCTIONS_EXTENSION_VERSION=~4 \
+              FUNCTIONS_WORKER_RUNTIME=node \
+              NODE_VERSION=20 \
+              SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
-      - name: Build Deployment ZIP
+      - name: Deploy Functions Directly
         run: |
-          echo "Building deployment package..."
+          echo "Copying Functions files to Azure..."
 
-          # Install zip
-          sudo apt-get update && sudo apt-get install -y zip
-
-          # Create clean target directory
+          # Create a fresh deployment archive with only required files
           mkdir -p ./deployment-source
-          cp -r server/* ./deployment-source/
+          cd server
 
-          # Remove unnecessary files
-          rm -rf ./deployment-source/node_modules
-          rm -rf ./deployment-source/.git
-          rm -rf ./deployment-source/.vscode
-          rm -f ./deployment-source/.funcignore
-          rm -f ./deployment-source/src
+          # Copy function folders and host.json
+          for dir in $(ls -d */); do
+            if [[ "$dir" != "node_modules/" ]] && [[ "$dir" != .git* ]] && [[ "$dir" != .vscode* ]] && [[ "$dir" != src/ ]]; then
+              cp -r "$dir" ../../deployment-source/
+            fi
+          done
 
-          # Create zip with only required files
-          cd ./deployment-source
-          zip -r ../function.zip . -x "*.git*" "node_modules/*" ".vscode/*" "src/*"
+          # Copy host.json and package.json if they exist
+          if [ -f "host.json" ]; then
+            cp host.json ../../deployment-source/
+          fi
+
+          if [ -f "package.json" ]; then
+            cp package.json ../../deployment-source/
+          fi
+
+          echo "Function files deployment archive:"
+          find ../../deployment-source -type f | sort
+
+          # Use zip to create package
+          cd ../../deployment-source
+          zip -r ../function.zip .
 
           # Cleanup
-          cd ..
-          rm -rf ./deployment-source
+          cd ../..
+          rm -rf deployment-source
 
-      - name: Deploy Function App via ZIP
+      - name: Deploy ZIP
         run: |
           echo "Starting Function App deployment..."
-
           az webapp deployment source config-zip \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
             --src ../function.zip
 
-      - name: Restart Function App
+      - name: Restart
         run: |
-          echo "Restarting Function App to apply changes..."
           az webapp restart \
             --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth \
-            --slot production
+            --resource-group rg-todos-uksouth
 
-      - name: Verify Deployment
+      - name: Verify
         run: |
-          echo "Deployment complete! Check Azure Portal or test endpoint:"
+          echo "Deployment verified!"
           az functionapp function list \
             --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth || echo "Functions may take a few minutes to register"
-
-          # Test the function
-          timeout 30 curl -X GET "https://rg-todos-func-app.azurewebsites.net/api/GetItems" -H "accept: application/json" || echo "Function endpoint check attempted"
+            --resource-group rg-todos-uksouth || echo "Checking deployment status..."
