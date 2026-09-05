@@ -28,9 +28,18 @@ jobs:
           cd server
           zip -r ../function.zip . -x "*.git*" "*.node_modules/*" "node_modules/*" "local.settings.json" ".vscode/*" "src/*"
 
+      - name: Test Zip File
+        run: |
+          ls -la ../function.zip
+
       - name: Deploy Function App
         run: |
+          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
           az webapp deployment source config-zip \
             --name ${{ secrets.FUNCTION_APP_NAME }} \
             --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
             --src ../function.zip
+
+      - name: Check Function List
+        run: |
+          az functionapp list --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --query "[].name" --output table
