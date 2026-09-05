@@ -6,7 +6,7 @@
     "start": "func start"
   },
   "dependencies": {
-    "@azure/cosmos": "^4.0.0",
+    "@azure/data-tables": "13.3.2",
     "dotenv": "^16.3.1"
   }
 }

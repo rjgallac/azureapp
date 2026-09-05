@@ -1,35 +1,17 @@
 param location string
-// Using the Core API as requested.
-resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2021-04-15' = {
-  name: 'todos-cosmos-db' // Using a unique name
+
+// --- 1. Storage Account (Table Storage) ---
+resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
+  name: uniqueString(location) // Use only uniqueString(location) for the name
   location: location
   sku: {
-    name: 'Standard'
-    family: '4'
+    name: 'Standard_LRS'
+    family: 'Standard'
   }
-  properties: {
-    databaseAccountOfferType: 'Standard'
-    databaseAccountKind: 'Global'
-    locations: [
-      {
-        locationName: location
-        failoverPriority: 0
-      }
-    ]
-  }
+  kind: 'StorageV2'
 }
 
-// --- 3. Cosmos DB Database ---
-resource todoDatabase 'Microsoft.DocumentDB/databaseAccounts/sqlDatabases@2021-10-15' = {
-  parent: cosmosAccount
-  name: 'todos'
-  properties: {
-    databaseName: 'todos'
-    resource: {
-      id: '${parent.id}/sqlDatabases/todos'
-    }
-  }
-}
+
 
 // --- Outputs ---
-output cosmosDbEndpoint string = cosmosAccount.properties.documentEndpoint
+output storageAccountName string = storageAccount.name

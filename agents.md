@@ -38,9 +38,9 @@ The deployment process must be executed in the following sequence:
 1.  Ensure the `infrastructure/main.bicep` file is up-to-date.
 2.  Run the deployment command from the root directory, targeting the subscription scope:
     ```bash
-    az deployment sub create --name todos --template-file infrastructure/main.bicep --parameters location=uksouth
+    az deployment group create --resource-group <TARGET_RG_NAME> --template-file infrastructure/main.bicep --parameters location=uksouth
     ```
-    *Note: The `main.bicep` template is now structured to create the Resource Group first, and then deploy all other resources into it. This command deploys at the subscription level.*
+    *Note: The `main.bicep` template is now structured to create the Resource Group first, and then deploy all other resources into it. The `--resource-group` parameter in the command should ideally point to a pre-existing group, or you should adjust the command to deploy at the subscription level if the template is designed to create the RG.*
 
 ### Step 4: Update Code & Deploy Backend
 **Goal:** Connect the backend code to the newly provisioned Cosmos DB.
@@ -64,3 +64,5 @@ The deployment process must be executed in the following sequence:
 
 ---
 **Key Takeaway:** The infrastructure deployment (Step 3) creates the *scaffolding*. The code deployment (Step 4) fills the scaffolding with *logic* and *credentials*.
+
+azurite --silent --location .azurite --debug .azurite/debug.log

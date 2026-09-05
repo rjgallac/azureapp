@@ -1,27 +1,28 @@
 const { randomUUID } = require('crypto');
 const https = require('https');
-const { CosmosClient } = require('@azure/cosmos');
+const { TableClient } = require('@azure/data-tables');
 
 module.exports = async function (context, req) {
-    const connectionString = process.env.CosmosDBConnectionString;
-    const useLocalEmulator = process.env.CosmosDBAllowInsecureTLS === 'true'
-        && connectionString?.includes('https://localhost:8081');
-    const client = useLocalEmulator
-        ? new CosmosClient({
-            connectionString,
-            agent: new https.Agent({ rejectUnauthorized: false })
-        })
-        : new CosmosClient(connectionString);
-    const dbName = process.env.DB_NAME || "YourDatabase";
-    const containerName = process.env.CONTAINER_NAME || "YourContainer";
-    const containerClient = client.database(dbName).container(containerName);
+    const connectionString = process.env.StorageConnectionString;
+    const tableName = process.env.TABLE_NAME || "Todos";
+    // Initialize the table-specific client instead of the general storage client.
+    const tableClient = TableClient.fromConnectionString(connectionString, tableName, { allowInsecureConnection: true });
 
     try {
         if (req.method === 'GET') {
-            const { resources: items } = await containerClient.items.query({
-                query: 'SELECT * FROM c ORDER BY c.createdAt DESC'
-            });
-            context.res = { body: items || [] };
+            // Fetch all items, filtering for incomplete todos.
+            const entities = await tableClient.listEntities({ filter: 'completed eq false' });
+            items = [];
+            for await (const entity of entities) {
+                items.push({
+                    id: entity.rowKey,
+                    text: entity.text,
+                    completed: entity.completed,
+                    createdAt: entity.createdAt
+                });
+            }
+            
+            context.res = { body: items };
             return;
         }
 
@@ -33,19 +34,32 @@ module.exports = async function (context, req) {
             }
 
             const item = {
-                id: randomUUID(),
                 text,
                 completed: false,
                 createdAt: new Date().toISOString()
             };
-            const { resource } = await containerClient.items.create(item);
-            context.res = { status: 201, body: resource || item };
+            // Use a unique ID as the Row Key.
+            const rowKey = randomUUID();
+            // Use a fixed partition key for all todos.
+            const partitionKey = "Todos"; 
+            
+            await tableClient.createEntity({partitionKey: partitionKey,rowKey, text, completed: false, createdAt: new Date().toISOString()});
+            context.res = { status: 201, body: item };
             return;
         }
 
         if (req.method === 'PUT') {
-            const id = typeof req.body?.id === 'string' ? req.body.id : '';
-            if (!id || typeof req.body?.completed !== 'boolean') {
+            const rowKey = req.body?.id;
+            console.log(`Updating entity with RowKey: ${rowKey}`);
+
+            let completed = req.body?.completed;
+
+            // Coerce completed to boolean if it's a string representation of boolean
+            if (typeof completed === 'string') {
+                completed = completed.toLowerCase() === 'true';
+            }
+
+            if (!rowKey || typeof completed === 'undefined') {
                 context.res = {
                     status: 400,
                     body: { message: 'Todo id and completed value are required.' }
@@ -53,25 +67,27 @@ module.exports = async function (context, req) {
                 return;
             }
 
-            const { resources: matches } = await containerClient.items.query({
-                query: 'SELECT * FROM c WHERE c.id = @id',
-                parameters: [{ name: '@id', value: id }]
-            }).fetchAll();
-            const existingItem = matches[0];
+            // Assuming all todos share the same partition key for simplicity.
+            const partitionKey = "Todos"; 
+            console.log(`PartitionKey: ${partitionKey}, RowKey: ${rowKey}, Completed: ${completed}`);
+            // 1. Check if the item exists
+            const existingItem = await tableClient.getEntity(partitionKey, rowKey).catch(err => {
+                if (err.statusCode === 404) {
+                    return null; // Item not found
+                }
+                throw err; // Rethrow other errors
+            });
             if (!existingItem) {
                 context.res = { status: 404, body: { message: 'Todo not found.' } };
+
                 return;
             }
 
-            const { resource: containerDefinition } = await containerClient.read();
-            const partitionKeyPath = containerDefinition?.partitionKey?.paths?.[0];
-            const partitionKeyValue = partitionKeyPath
-                ?.replace(/^\//, '')
-                .split('/')
-                .reduce((value, property) => value?.[property], existingItem);
-            const updatedItem = { ...existingItem, completed: req.body.completed };
-            const { resource } = await containerClient.item(id, partitionKeyValue).replace(updatedItem);
-            context.res = { body: resource || updatedItem };
+            // 2. Update the entity
+            const updatedItem = {partitionKey, rowKey, completed };
+            console.log(`Updating entity: ${JSON.stringify(updatedItem)}`);
+            await tableClient.updateEntity( updatedItem, "Merge" );
+            context.res = { body: existingItem };
             return;
         }
 

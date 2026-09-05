@@ -21,6 +21,6 @@ module backendResources './modules/backend-resources.bicep' = {
 
 
 // --- Outputs ---
-output cosmosDbEndpoint string = backendResources.outputs.cosmosDbEndpoint
+output storageAccountName string = backendResources.outputs.storageAccountName
 output resourceGroupName string = resourceGroup.name
 param prefix string = 'rg-todos'
