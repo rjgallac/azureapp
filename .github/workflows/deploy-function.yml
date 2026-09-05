@@ -15,9 +15,9 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Login to Azure
-        uses: azure/login@v1
-        with:
-          creds: '${{ secrets.AZURE_CREDENTIALS }}'
+        run: |
+          echo '${{ secrets.AZURE_CREDENTIALS }}' > ./azure-creds.json
+          az login --service-principal --username "$(jq -r .clientId ./azure-creds.json)" --password "$(jq -r .clientSecret ./azure-creds.json)" --tenant "$(jq -r .tenantId ./azure-creds.json)"
 
       - name: Enable Functions
         run: |
