@@ -23,14 +23,10 @@ jobs:
           cd server
           npm ci
 
-      - name: Zip Function App
+      - name: Compress Function App
         run: |
           cd server
-          zip -r ../function.zip . -x "*.git*" "*.node_modules/*" "node_modules/*" "local.settings.json" ".vscode/*" "src/*"
-
-      - name: Test Zip File
-        run: |
-          ls -la ../function.zip
+          7z a -tzip -mx9 ../function.zip . -xr!*.git* -xr!node_modules/* -xr!local.settings.json -xr!.vscode/* -xr!src/*
 
       - name: Deploy Function App
         run: |
@@ -40,6 +36,6 @@ jobs:
             --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
             --src ../function.zip
 
-      - name: Check Function List
+      - name: Verify Deployment
         run: |
           az functionapp list --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --query "[].name" --output table
