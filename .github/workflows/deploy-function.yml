@@ -31,7 +31,7 @@ jobs:
           az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
-            --settings FUNCTIONS_EXTENSION_VERSION=~4 FUNCTIONS_WORKER_RUNTIME=node NODE_VERSION=20
+            --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20
 
           # Create and upload zip
           cd server
