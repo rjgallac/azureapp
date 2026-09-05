@@ -1,4 +1,4 @@
-name: Deploy Function App
+name: Deploy Function App via Git Sync
 
 on:
   push:
@@ -18,27 +18,47 @@ jobs:
         with:
           node-version: '20.x'
 
-      - name: Install Dependencies
-        run: |
-          cd server
-          npm ci
+      - name: Login to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy via Azure CLI
+      - name: Enable Functions
         run: |
-          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-
-          # Enable Functions
           az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
-            --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20
+            --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
-          # Create and upload zip
+      - name: Initialize Git and Sync Files
+        run: |
           cd server
-          7za a -tzip -mx9 function.zip . -xr!*.git* -xr!node_modules/* -xr!local.settings.json -xr!.vscode/* -xr!src/*
 
-          # Deploy zip
-          az webapp deployment source config-zip \
+          # Initialize git if not already
+          git init
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+
+          # Add all files (including package.json)
+          git add .
+
+          # Configure deployment target
+          az webapp deployment source config \
             --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth \
-            --src function.zip
+            --resource-group rg-todos-uksouth
+
+          # Trigger sync
+          git push --set-upstream origin main
+
+      - name: Restart Function App
+        run: |
+          timeout 60 az webapp restart \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth
+
+      - name: Verify Deployment
+        run: |
+          echo "Deployment complete. Check functions in Azure Portal or use:"
+          az functionapp function list \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth
