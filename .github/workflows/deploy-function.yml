@@ -16,26 +16,29 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18.x'
+          node-version: '20.x'
 
       - name: Install Dependencies
         run: |
           cd server
           npm ci
 
-      - name: Compress Function App
-        run: |
-          cd server
-          7za a -tzip -mx9 ../function.zip . -xr!*.git* -xr!node_modules/* -xr!local.settings.json -xr!.vscode/* -xr!src/*
-
-      - name: Deploy Function App
+      - name: Deploy via Azure CLI
         run: |
           az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-          az webapp deployment source config-zip \
-            --name ${{ secrets.FUNCTION_APP_NAME }} \
-            --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
-            --src ../function.zip
 
-      - name: Verify Deployment
-        run: |
-          az functionapp list --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} --query "[].name" --output table
+          # Enable Functions
+          az functionapp settings update \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth \
+            --settings FUNCTIONS_EXTENSION_VERSION=~4 FUNCTIONS_WORKER_RUNTIME=node NODE_VERSION=20
+
+          # Create and upload zip
+          cd server
+          7za a -tzip -mx9 function.zip . -xr!*.git* -xr!node_modules/* -xr!local.settings.json -xr!.vscode/* -xr!src/*
+
+          # Deploy zip
+          az webapp deployment source config-zip \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth \
+            --src function.zip
