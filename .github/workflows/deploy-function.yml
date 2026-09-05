@@ -27,29 +27,22 @@ jobs:
             --resource-group rg-todos-uksouth \
             --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
-      - name: Deploy Backend
+      - name: Deploy Backend via ZIP
         run: |
           cd server
 
-          # Initialize git and prepare files
-          git init
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git add .
+          # Clean and create deployment package
+          rm -rf node_modules
+          rm -f local.settings.json
 
-          # Try alternative deployment - check deployment source
-          az webapp deployment source show-config \
-            --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth || \
-            echo "Config not set"
+          # Package files into zip
+          7za a -tzip ../function.zip . -xr!*.git* -xr!src/* -xr!node_modules/*
 
-          # List current files in Azure
-          echo "Current Function App files:"
-          az webapp deployment source show \
+          # Deploy using zip (now works with Premium plan)
+          az webapp deployment source config-zip \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
-            --query "repositoryUrl" || \
-            echo "Could not retrieve repository URL"
+            --src ../function.zip
 
       - name: Verify Deployment
         run: |
