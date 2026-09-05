@@ -3,3 +3,4 @@ client/build
 server/local.settings.json
 .azurite
 .local.settings.json
+function.zip
