@@ -19,14 +19,17 @@ jobs:
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy Backend
+      - name: Enable Functions
         run: |
-          # Enable Functions
+          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
           az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
             --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
+      - name: Deploy Backend
+        run: |
           cd server
 
           # Initialize git and sync files
@@ -48,19 +51,3 @@ jobs:
           az functionapp function list \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth || echo "Functions may take a few minutes to register"
-
-          # Trigger sync
-          git push --set-upstream origin main
-
-      - name: Restart Function App
-        run: |
-          timeout 60 az webapp restart \
-            --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth
-
-      - name: Verify Deployment
-        run: |
-          echo "Deployment complete. Check functions in Azure Portal or use:"
-          az functionapp function list \
-            --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth
