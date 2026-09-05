@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "Azure Functions backend for the web app",
   "scripts": {
-    "start": "func start"
+    "start": "func start",
+    "build": "echo 'No build required for Node.js Function App'"
   },
   "dependencies": {
     "@azure/data-tables": "13.3.2",
