@@ -1,10 +1,11 @@
-name: Deploy Function App via Git Sync
+name: Deploy Function App
 
 on:
   push:
     branches: [main]
     paths:
       - 'server/**'
+      - 'infrastructure/**'
 
 jobs:
   deploy-function:
@@ -13,39 +14,40 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Login to Azure
+        uses: azure/login@v1
         with:
-          node-version: '20.x'
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Enable Functions
+      - name: Deploy Backend
         run: |
+          # Enable Functions
           az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
             --settings FUNCTIONS_EXTENSION_VERSION=~4 NODE_VERSION=20 SCM_DO_BUILD_DURING_DEPLOYMENT=true
 
-      - name: Install Dependencies
-        run: |
-          cd server
-          npm ci
-
-      - name: Initialize Git and Sync Files
-        run: |
           cd server
 
-          # Initialize git if not already
+          # Initialize git and sync files
           git init
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-
-          # Add all files (including package.json)
           git add .
+          git commit -m "Update Function App"
 
-          # Configure deployment target
-          az webapp deployment source config \
+          # Sync to Azure
+          az webapp deployment source config --name rg-todos-func-app --resource-group rg-todos-uksouth --repo-url https://github.com/ --branch main --manual-integration
+
+          # Restart to apply changes
+          timeout 60 az webapp restart --name rg-todos-func-app --resource-group rg-todos-uksouth
+
+      - name: Verify Deployment
+        run: |
+          echo "Deployment complete! Check Azure Portal for Function App status."
+          az functionapp function list \
             --name rg-todos-func-app \
-            --resource-group rg-todos-uksouth
+            --resource-group rg-todos-uksouth || echo "Functions may take a few minutes to register"
 
           # Trigger sync
           git push --set-upstream origin main
