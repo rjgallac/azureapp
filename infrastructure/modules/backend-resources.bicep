@@ -68,6 +68,10 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
         name: 'node'
         version: '20'
       }
+      scaleAndConcurrency: {
+        instanceMemoryMB: 2048
+        maximumInstanceCount: 100
+      }
       appSettings: [
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
