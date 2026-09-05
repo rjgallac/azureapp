@@ -62,7 +62,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
       deployment: {
         source: {
           gitHub: {
-            repositoryUrl: 'https://github.com/<YOUR_USERNAME>/azureapp.git'
+            repositoryUrl: 'https://github.com/rjgallac/azureapp.git'
             branch: 'main'
             isManualIntegration: true
           }
@@ -87,21 +87,8 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
         }
       ]
     }
-      appSettings: [
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'node'
-        }
-        {
-          name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${listKeys(storageAccount.id, '2023-01-01').keys[0].value};EndpointSuffix=core.windows.net'
-        }
-      ]
-    }
+     
+    
     identity: {
       type: 'SystemAssigned'
     }
