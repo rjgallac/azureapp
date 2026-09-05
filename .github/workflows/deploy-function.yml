@@ -31,18 +31,25 @@ jobs:
         run: |
           cd server
 
-          # Initialize git and sync files
+          # Initialize git and prepare files
           git init
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
           git add .
-          git commit -m "Update Function App"
 
-          # Sync to Azure
-          az webapp deployment source config --name rg-todos-func-app --resource-group rg-todos-uksouth --repo-url https://github.com/ --branch main --manual-integration
+          # Try alternative deployment - check deployment source
+          az webapp deployment source show-config \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth || \
+            echo "Config not set"
 
-          # Restart to apply changes
-          timeout 60 az webapp restart --name rg-todos-func-app --resource-group rg-todos-uksouth
+          # List current files in Azure
+          echo "Current Function App files:"
+          az webapp deployment source show \
+            --name rg-todos-func-app \
+            --resource-group rg-todos-uksouth \
+            --query "repositoryUrl" || \
+            echo "Could not retrieve repository URL"
 
       - name: Verify Deployment
         run: |
