@@ -23,9 +23,15 @@ jobs:
           cd server
           npm ci
 
-      - name: Deploy via Azure CLI
+      - name: Zip Function App
         run: |
           cd server
-          npm install -g azure-functions-core-tools@4
-          func azure functionsapp publish ${{ secrets.FUNCTION_APP_NAME }}
+          zip -r ../function.zip .
+
+      - name: Deploy Function App
+        run: |
+          az webapp deployment source config-zip \
+            --name ${{ secrets.FUNCTION_APP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP_NAME }} \
+            --src ../function.zip
         shell: bash
