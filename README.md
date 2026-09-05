@@ -44,3 +44,14 @@ The application follows a monorepo structure:
 
 ## 💰 Cost Guidance
 This architecture is designed to be budget-friendly by leveraging Azure's Consumption Plans and Free Tiers. Always monitor usage to stay within free limits.
+
+
+az webapp delete \
+  --name rg-todos-func-app \
+  --resource-group rg-todos-uksouth
+
+az deployment sub create \
+  --name todos-v2 \
+  --template-file infrastructure/main.bicep \
+  --location uksouth \
+  --parameters prefix=rg-todos
