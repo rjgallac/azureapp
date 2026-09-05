@@ -30,13 +30,18 @@ resource todosTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: '${prefix}-func-plan'
   location: location
-  kind: 'functionapp' // Indicates Linux Function App
   sku: {
-    tier: 'FlexConsumption'
-    name: 'FC1'
+    tier: 'P1v3'  // Premium Plan supports all deployment methods
+    name: 'P1V3'  // Or 'B1' / 'B2' / 'B3' for cheaper option
+    size: 'P1V3'
+    family: 'P'
   }
   properties: {
     reserved: true
+    isXenon: false
+    capabilities: []
+    operatingSystem: 'Linux'
+    provisioningState: 'Succeeded'
   }
 }
 
@@ -54,41 +59,12 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    functionAppConfig: {
-      runtime: {
-        name: 'node'
-        version: '20'
+    appSettings: [
+      {
+        name: 'FUNCTIONS_EXTENSION_VERSION'
+        value: '~4'
       }
-      deployment: {
-        source: {
-          gitHub: {
-            repositoryUrl: 'https://github.com/rjgallac/azureapp.git'
-            branch: 'main'
-            isManualIntegration: true
-          }
-        }
-      }
-      scaleAndConcurrency: {
-        instanceMemoryMB: 2048
-        maximumInstanceCount: 100
-      }
-      appSettings: [
-        {
-          name: 'FUNCTIONS_EXTENSION_VERSION'
-          value: '~4'
-        }
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'node'
-        }
-        {
-          name: 'NODE_VERSION'
-          value: '20'
-        }
-      ]
-    }
-     
-    
+    ]
     identity: {
       type: 'SystemAssigned'
     }
