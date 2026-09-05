@@ -44,7 +44,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
 // --- 3. Function App Resource (Node.js) ---
 // =================================================================================
 // Deploys the Function App itself, linking it to the App Service Plan.
-resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
+ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: '${prefix}-func-app'
   location: location
   dependsOn: [
@@ -54,8 +54,19 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    siteConfig: {
-      linuxFxVersion: 'NODE|20'
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'azureBlob'
+          connection: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${listKeys(storageAccount.id, '2023-01-01').keys[0].value};EndpointSuffix=core.windows.net'
+          containerName: 'function-app-package'
+        }
+      }
+      runtime: {
+        node: {
+          version: '20'
+        }
+      }
       appSettings: [
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
