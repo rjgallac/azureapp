@@ -1,9 +1,9 @@
 param location string
 param prefix string
 
-// --- 1. Storage Account (Table Storage) ---
-resource storageAccount 'Microsoft.Storage/storageAccounts@2021-09-01' = {
-  name: uniqueString(location) // Use only uniqueString(location) for the name
+// --- 1. Storage Account (Required for Azure Functions) ---
+resource storageAccount 'Microsoft.Storage/storageAccounts@2023-01-01' = {
+  name: 'st${uniqueString(resourceGroup().id)}' // Using unique string based on RG ID for better uniqueness
   location: location
   sku: {
     name: 'Standard_LRS'
@@ -23,47 +23,54 @@ resource todosTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021
   parent: tableService
 }
 
-
 // =================================================================================
 // --- 2. App Service Plan for Function App ---
 // =================================================================================
 // Defines the underlying compute resources for the Function App.
-resource appServicePlan 'Microsoft.Web/serverfarms@2022-09-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: '${prefix}-func-plan'
   location: location
+  kind: 'functionapp' // Indicates Linux Function App
   sku: {
-    name: 'FC1'
     tier: 'FlexConsumption'
+    name: 'FC1'
   }
   properties: {
     reserved: true
   }
-  kind: 'functionapp'
 }
 
 // =================================================================================
 // --- 3. Function App Resource (Node.js) ---
 // =================================================================================
 // Deploys the Function App itself, linking it to the App Service Plan.
-resource functionApp 'Microsoft.Web/sites@2022-09-01' = {
+resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: '${prefix}-func-app'
   location: location
+  dependsOn: [
+    appServicePlan
+  ]
+  kind: 'functionapp,linux'
   properties: {
     serverFarmId: appServicePlan.id
-    siteConfig: {
-      // Specify the runtime stack
-      linuxFxVersion: 'NODE|18-v4' // Use the appropriate Node.js version
-      appSettings: [
-        {
-          name: 'FUNCTIONS_WORKER_RUNTIME'
-          value: 'node'
+    functionAppConfig: {
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: storageAccount.id
+          authentication: {
+            type: 'SystemAssignedIdentity'
+          }
         }
-        // Add other necessary settings here, e.g., Connection Strings
-        // {
-        //   name: 'CosmosDbConnection'
-        //   value: 'YOUR_CONNECTION_STRING' // Replace with actual secret/parameter
-        // }
-      ]
+      }
+      runtime: {
+        name: 'node'
+        version: '24'
+      }
+      scaleAndConcurrency: {
+        instanceMemoryMB: 2048
+        maximumInstanceCount: 100
+      }
     }
   }
 }
