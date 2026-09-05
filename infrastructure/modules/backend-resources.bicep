@@ -53,27 +53,32 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   kind: 'functionapp,linux'
   properties: {
     serverFarmId: appServicePlan.id
-    functionAppConfig: {
-      deployment: {
-        storage: {
-          type: 'blobContainer'
-          value: storageAccount.id
-          authentication: {
-            type: 'SystemAssignedIdentity'
-          }
+    httpsOnly: true
+    siteConfig: {
+      linuxFxVersion: 'NODE|18'
+      appSettings: [
+        {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
         }
-      }
-      runtime: {
-        name: 'node'
-        version: '24'
-      }
-      scaleAndConcurrency: {
-        instanceMemoryMB: 2048
-        maximumInstanceCount: 100
-      }
+        {
+          name: 'FUNCTIONS_WORKER_RUNTIME'
+          value: 'node'
+        }
+        {
+          name: 'AzureWebJobsStorage'
+          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${listKeys(storageAccount.id, '2023-01-01').keys[0].value};EndpointSuffix=core.windows.net'
+        }
+      ]
+    }
+    identity: {
+      type: 'SystemAssigned'
     }
   }
 }
 
 // --- Outputs ---
 output storageAccountName string = storageAccount.name
+output functionAppName string = functionApp.name
+output functionAppUrl string = 'https://${functionApp.name}.azurewebsites.net'
+output storageConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${listKeys(storageAccount.id, '2023-01-01').keys[0].value};EndpointSuffix=core.windows.net'
