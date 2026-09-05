@@ -38,7 +38,6 @@ module.exports = async function (context, req) {
                 completed: false,
                 createdAt: new Date().toISOString()
             };
-            
             // Use a unique ID as the Row Key.
             const rowKey = randomUUID();
             // Use a fixed partition key for all todos.
