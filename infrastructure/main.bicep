@@ -1,6 +1,6 @@
+targetScope = 'subscription'
 // az deployment sub create --name todos --template-file infrastructure/main.bicep -l uksouth
 
-targetScope = 'subscription'
 
 @description('The location where all resources will be deployed.')
 param location string = 'uksouth'
@@ -15,9 +15,9 @@ module backendResources './modules/backend-resources.bicep' = {
   scope: resourceGroup
   params: {
     location: location
+    prefix: prefix
   }
 }
-
 
 
 // --- Outputs ---
