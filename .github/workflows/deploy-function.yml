@@ -28,7 +28,7 @@ jobs:
           az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
 
           # Enable Functions
-          az functionapp settings update \
+          az functionapp config appsettings set \
             --name rg-todos-func-app \
             --resource-group rg-todos-uksouth \
             --settings FUNCTIONS_EXTENSION_VERSION=~4 FUNCTIONS_WORKER_RUNTIME=node NODE_VERSION=20
