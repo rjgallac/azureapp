@@ -27,9 +27,24 @@ The application follows a monorepo structure:
    - Start the backend: `func start` (from the `/server` directory).
    - Start the frontend: `npm start` (from the `/client` directory).
 5. **Deployment:**
-   - Use the scripts/tools in the `/infrastructure` directory to provision Azure resources (Cosmos DB, Function App, etc.).
-   - Deploy the client build to Azure Static Web Apps.
-   - Deploy the server code to the Azure Function App.
+    - Use the scripts/tools in the `/infrastructure` directory to provision Azure resources (Cosmos DB, Function App, etc.).
+    - Deploy the client build to Azure Static Web Apps.
+    - Deploy the server code to the Azure Function App (see `.github/workflows/deploy-function.yml`).
+
+    **Backend Deployment Setup:**
+    1. Generate Azure credentials for CI/CD:
+       ```bash
+       az ad sp create-for-rbac --scopes /subscriptions/YOUR_SUBSCRIPTION_ID --role contributor --name "GH-Actions-Function-Deploy"
+       ```
+    2. Add these secrets to your GitHub repository settings:
+       - `AZURE_CREDENTIALS` (service principal JSON)
+       - `AZURE_CLIENT_ID`
+       - `AZURE_CLIENT_SECRET`
+       - `AZURE_TENANT_ID`
+       - `FUNCTION_APP_NAME`
+
+    **Frontend Deployment Setup (Optional):**
+    - Set up GitHub Actions workflow for frontend deployment to Azure Static Web Apps.
 
 ## 💰 Cost Guidance
 This architecture is designed to be budget-friendly by leveraging Azure's Consumption Plans and Free Tiers. Always monitor usage to stay within free limits.

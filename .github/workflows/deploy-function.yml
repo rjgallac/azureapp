@@ -1,0 +1,43 @@
+name: Deploy Function App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'server/**'
+
+jobs:
+  deploy-function:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+
+      - name: Install Dependencies
+        run: |
+          cd server
+          npm ci --only=production
+
+      - name: Setup Azure CLI
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Setup Azure Functions Core Tools
+        run: |
+          npm install -g azure-functions-core-tools@4
+
+      - name: Login to Azure Functions
+        run: |
+          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      - name: Publish Function App
+        run: |
+          cd server
+          func azure functionsapp publish ${{ secrets.FUNCTION_APP_NAME }} --no-hang
+        shell: bash
