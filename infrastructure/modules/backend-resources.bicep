@@ -55,7 +55,7 @@ resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
     serverFarmId: appServicePlan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'NODE|18'
+      linuxFxVersion: 'NODE|20'
       appSettings: [
         {
           name: 'FUNCTIONS_EXTENSION_VERSION'
