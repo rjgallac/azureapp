@@ -23,21 +23,9 @@ jobs:
           cd server
           npm ci --only=production
 
-      - name: Setup Azure CLI
-        uses: azure/login@v1
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Setup Azure Functions Core Tools
-        run: |
-          npm install -g azure-functions-core-tools@4
-
-      - name: Login to Azure Functions
-        run: |
-          az login --service-principal --username ${{ secrets.AZURE_CLIENT_ID }} --password ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-
-      - name: Publish Function App
+      - name: Deploy via Azure CLI
         run: |
           cd server
-          func azure functionsapp publish ${{ secrets.FUNCTION_APP_NAME }} --no-hang
+          npm install -g azure-functions-core-tools@4
+          func azure functionsapp publish ${{ secrets.FUNCTION_APP_NAME }}
         shell: bash
