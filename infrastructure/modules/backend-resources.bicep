@@ -30,18 +30,18 @@ resource todosTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021
 resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: '${prefix}-func-plan'
   location: location
+  kind: 'functionapp'
   sku: {
-    tier: 'P1v3'  // Premium Plan supports all deployment methods
-    name: 'P1V3'  // Or 'B1' / 'B2' / 'B3' for cheaper option
-    size: 'P1V3'
-    family: 'P'
+    tier: 'Basic'
+    name: 'B1'  // Very cheap: ~$0.002/hour
+    size: 'B1'
+    family: 'B'
+    capacity: 1
   }
   properties: {
     reserved: true
-    isXenon: false
-    capabilities: []
     operatingSystem: 'Linux'
-    provisioningState: 'Succeeded'
+    freeTier: false
   }
 }
 
