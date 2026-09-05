@@ -26,7 +26,7 @@ jobs:
       - name: Compress Function App
         run: |
           cd server
-          7z a -tzip -mx9 ../function.zip . -xr!*.git* -xr!node_modules/* -xr!local.settings.json -xr!.vscode/* -xr!src/*
+          7za a -tzip -mx9 ../function.zip . -xr!*.git* -xr!node_modules/* -xr!local.settings.json -xr!.vscode/* -xr!src/*
 
       - name: Deploy Function App
         run: |
