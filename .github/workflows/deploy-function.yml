@@ -31,7 +31,6 @@ jobs:
       - name: Deploy Backend
         run: |
           cd server
-
           # Initialize git and sync files
           git init
           git config user.email "actions@github.com"
