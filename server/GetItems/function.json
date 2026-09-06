@@ -5,7 +5,9 @@
       "direction": "in",
       "name": "req",
       "methods": ["get", "post", "put", "options"],
-      "route": "items"
+      "route": "items",
+      "authLevel": "anonymous"
+
     },
     {
       "type": "http",
