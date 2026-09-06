@@ -6,7 +6,7 @@
     "start": "func start",
     "build": "echo 'No build required for Node.js Functions'"
   },
-  "main": "index.js",
+  "main": "GetIItems/index.js",
   "dependencies": {
     "@azure/data-tables": "13.3.2",
     "dotenv": "^16.3.1"

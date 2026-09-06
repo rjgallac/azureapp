@@ -56,8 +56,6 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
       // Deployment Storage Configuration
       deployment: {
         storage: {
-          type: 'blobContainer'
-          value: '${storageAccount.properties.primaryEndpoints.blob}deployment-container'
           authentication: {
             type: 'SystemAssignedIdentity'
           }
@@ -68,6 +66,7 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
         name: 'node'
         version: '20'
       }
+      
       // Scaling Configuration
       scaleAndConcurrency: {
         maximumInstanceCount: 100
