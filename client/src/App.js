@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-// Assume your API runs on a specific port/local URL
-const API_URL = 'http://localhost:7071/api/items'; 
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:7071/api/items';
 
 function App() {
   const [items, setItems] = useState([]);
