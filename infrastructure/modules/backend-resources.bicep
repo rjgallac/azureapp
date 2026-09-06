@@ -27,21 +27,16 @@ resource todosTable 'Microsoft.Storage/storageAccounts/tableServices/tables@2021
 // --- 2. App Service Plan for Function App ---
 // =================================================================================
 // Defines the underlying compute resources for the Function App.
-// Using Consumption Plan (Y1) which is FREE for small personal projects (<$10/month)
-resource appServicePlan 'Microsoft.Web/serverfarms@2024-01-01' = {
+resource appServicePlan 'Microsoft.Web/serverfarms@2024-04-01' = {
   name: '${prefix}-func-plan'
   location: location
+  kind: 'functionapp' // Indicates Linux Function App
   sku: {
-    tier: 'Dynamic'
-    name: 'Y1'
-    capacity: 0  // Dynamic scaling
+    tier: 'FlexConsumption'
+    name: 'FC1'
   }
   properties: {
-    isSpot: false
-    maximumNumberOfWorkers: 10
     reserved: true
-    targetWorkerSize: 0
-    workerSizeId: 0
   }
 }
 
@@ -52,22 +47,35 @@ resource appServicePlan 'Microsoft.Web/serverfarms@2024-01-01' = {
  resource functionApp 'Microsoft.Web/sites@2024-04-01' = {
   name: '${prefix}-func-app'
   location: location
-  dependsOn: [
-    appServicePlan
-  ]
   kind: 'functionapp,linux'
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
-    appSettings: [
-      {
-        name: 'FUNCTIONS_EXTENSION_VERSION'
-        value: '~4'
+    
+    functionAppConfig: {
+      // Deployment Storage Configuration
+      deployment: {
+        storage: {
+          type: 'blobContainer'
+          value: '${storageAccount.properties.primaryEndpoints.blob}deployment-container'
+          authentication: {
+            type: 'SystemAssignedIdentity'
+          }
+        }
       }
-    ]
-    identity: {
-      type: 'SystemAssigned'
+      // Runtime Configuration
+      runtime: {
+        name: 'node'
+        version: '20'
+      }
+      // Scaling Configuration
+      scaleAndConcurrency: {
+        maximumInstanceCount: 100
+        instanceMemoryMB: 2048
+      }
     }
+     
+  
   }
 }
 
